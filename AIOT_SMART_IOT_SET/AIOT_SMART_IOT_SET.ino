@@ -70,11 +70,10 @@ const byte PcfButtonLedPin6 = 6;
 const byte PcfButtonLedPin7 = 7;
 
 void mqttReconnect() {
-  while (!client.connected()) {
+  if (!client.connected()) {
     if (client.connect(mqtt_Client, mqtt_username, mqtt_password)) {
       client.subscribe("@msg/#");
-    } else
-      delay(5000);
+    }
   }
 }
 
@@ -177,12 +176,12 @@ void setup() {
 #endif
   WiFi.begin(ssid, password);
 
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    digitalWrite(WIFI_LED, LOW);
-    delay(500);
-  }
-  digitalWrite(WIFI_LED, HIGH);
+  //while (WiFi.status() != WL_CONNECTED) {
+  //  Serial.print(".");
+  //  digitalWrite(WIFI_LED, LOW);
+  //  delay(500);
+  //}
+  //digitalWrite(WIFI_LED, HIGH);
   // Setup pinMode
   pinMode(IOT_LED, OUTPUT);
   pinMode(KEY_S1, INPUT_PULLUP);
@@ -210,10 +209,18 @@ void setup() {
   client.setCallback(callback);
 }
 void loop() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    digitalWrite(WIFI_LED, LOW);
+    delay(500);
+  }
+  else digitalWrite(WIFI_LED, HIGH);
+
   if (!client.connected()) {  // Re-connect to netpie
     digitalWrite(IOT_LED, LOW);
     mqttReconnect();
-  } else digitalWrite(IOT_LED, HIGH);
+  }
+  if (client.connected()) digitalWrite(IOT_LED, HIGH);
 
   // Button S1,S2
   Val_S1 = digitalRead(KEY_S1);
@@ -244,14 +251,14 @@ void loop() {
   int in4 = !pcf20.readButton(PcfButtonLedPin3);
 
   if (in1 == 1) {  //fan1
-    delay(1000);
+    //delay(1000);
     inputState1 = (inputState1 + 1) % 2;
     (inputState1 == 1) ? digitalWrite(O1, HIGH) : digitalWrite(O1, LOW);
     String data = "{\"data\":{\"Motor1\":" + String(inputState1) + "}}";
     updateShadow(data);
     delay(500);
   } else if (in2 == 1) {  //light1
-    delay(1000);
+    //delay(1000);
     inputState2 = (inputState2 + 1) % 2;
     (inputState2 == 1) ? pcf20.write(PcfButtonLedPin6, HIGH) : pcf20.write(PcfButtonLedPin6, LOW);
     String data = "{\"data\":{\"Light1\":" + String(inputState2) + "}}";
@@ -259,7 +266,7 @@ void loop() {
     delay(500);
 
   } else if (in3 == 1) {  //light2
-    delay(1000);
+    //delay(1000);
     inputState3 = (inputState3 + 1) % 2;
     (inputState3 == 1) ? pcf20.write(PcfButtonLedPin7, HIGH) : pcf20.write(PcfButtonLedPin7, LOW);
     String data = "{\"data\":{\"Light2\":" + String(inputState3) + "}}";
@@ -267,7 +274,7 @@ void loop() {
     delay(500);
 
   } else if (in4 == 1) {  //fan2
-    delay(1000);
+    //delay(1000);
     inputState4 = (inputState4 + 1) % 2;
     (inputState4 == 1) ? digitalWrite(O2, HIGH) : digitalWrite(O2, LOW);
     String data = "{\"data\":{\"Motor2\":" + String(inputState4) + "}}";
